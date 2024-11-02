@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 class MyModel {
   int? id;
@@ -11,15 +10,16 @@ class MyModel {
     return {
       'id': id,
       'resultDecision': resultDecision,
-      'decisionValue': json.encode(decisionValue), // Simpan sebagai JSON string
+      // `decisionValue` is handled separately in decision_value_table
     };
   }
 
-  static MyModel fromMap(Map<String, dynamic> map) {
+// Suggested code may be subject to a license. Learn more: ~LicenseLog:1528714582.
+  static MyModel fromMap(Map<String, dynamic> map, List<String> decisionValues) {
     return MyModel(
       id: map['id'],
-      resultDecision: map['resultDecision'],
-      decisionValue: List<String>.from(json.decode(map['decisionValue'])), // Kembali ke List
+      resultDecision: map['resultDecision'] ?? '',
+      decisionValue: decisionValues, // Kembali ke List
     );
   }
 }

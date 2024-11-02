@@ -8,11 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-<<<<<<< HEAD
 import 'package:submission_dicoding_decisioner/main.dart';
-=======
-import 'package:myapp/main.dart';
->>>>>>> c76bb81 (tes)
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {

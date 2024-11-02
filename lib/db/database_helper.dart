@@ -24,8 +24,11 @@ class DatabaseHelper {
     }
     return await openDatabase(
       path,
-      version: 1,
-      onCreate: _onCreate,
+      version: 2,
+    onConfigure: (db) async {
+      await db.execute("PRAGMA foreign_keys = ON");
+    },
+    onCreate: _onCreate,
     );
   }
 
@@ -33,38 +36,75 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE decision_table (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        resultDecision TEXT,
-        decisionValue TEXT
+        resultDecision TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE decision_value_table (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        decision_id INTEGER,
+        decisionValue TEXT,
+        FOREIGN KEY (decision_id) REFERENCES decision_table (id) ON DELETE CASCADE
       )
     ''');
   }
 
   Future<int?> insertItem(MyModel model) async {
     final db = await database;
-    List<Map<String, dynamic>> maps = model.decisionValue.map((e) => model.toMap()..['decisionValue'] = e).toList();
-    if(kDebugMode) {
-      print(maps);
-    }
 
-    return await db.transaction((txn) async {
-      var batch = txn.batch();
-      for (var map in maps) {
-        batch.insert('decision_table', map);
-      }
-      var results = await batch.commit();
-      return results.isNotEmpty ? results.last as int? : null;
+    // Insert into decision_table and get the generated id
+    int decisionId = await db.insert('decision_table', {
+      'resultDecision': model.resultDecision,
     });
+
+    // Insert each decision value into decision_value_table with decision_id as a reference
+    await db.transaction((txn) async {
+      var batch = txn.batch();
+      for (String value in model.decisionValue) {
+        batch.insert('decision_value_table', {
+          'decision_id': decisionId,
+          'decisionValue': value,
+        });
+      }
+      await batch.commit();
+    });
+
+    return decisionId;
   }
 
   Future<List<MyModel>> getItems() async {
-    final db = await database;
-    final result = await db.query('decision_table');
-    return result.map((json) => MyModel.fromMap(json)).toList();
+  final db = await database;
+  final decisionResults = await db.query('decision_table');
+
+  List<MyModel> items = [];
+  for (var decision in decisionResults) {
+    final decisionId = decision['id'] as int;
+
+    // Query decision values related to this decisionId
+    final valueResults = await db.query(
+      'decision_value_table',
+      where: 'decision_id = ?',
+      whereArgs: [decisionId],
+    );
+
+    // Extract the decisionValue list
+    List<String> decisionValues = valueResults
+        .map((valueMap) => valueMap['decisionValue'] as String)
+        .toList();
+
+    // Create MyModel instance and add to items list
+    items.add(MyModel.fromMap(decision, decisionValues)); // Panggil fromMap dengan decisionValues
   }
+
+  return items;
+}
+
 
   Future<int> updateItem(MyModel model) async {
     final db = await database;
-    return await db.update('decision_table', model.toMap(), where: 'id = ?', whereArgs: [model.id]);
+    return await db.update('decision_table', model.toMap(),
+        where: 'id = ?', whereArgs: [model.id]);
   }
 
   Future<int> deleteItem(int id) async {
@@ -72,5 +112,3 @@ class DatabaseHelper {
     return await db.delete('decision_table', where: 'id = ?', whereArgs: [id]);
   }
 }
-
-
