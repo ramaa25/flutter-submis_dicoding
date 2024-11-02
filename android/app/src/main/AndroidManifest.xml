@@ -1,14 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-<<<<<<< HEAD
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <application
         android:label="Decisioner"
-=======
-    <application
-        android:label="myapp"
->>>>>>> c76bb81 (tes)
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
