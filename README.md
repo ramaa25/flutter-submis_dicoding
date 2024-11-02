@@ -1,5 +1,11 @@
+<<<<<<< HEAD
 # Decisioner
 Submission for dicoding last project knowledge
+=======
+# myapp
+
+A new Flutter project.
+>>>>>>> c76bb81 (tes)
 
 ## Getting Started
 
