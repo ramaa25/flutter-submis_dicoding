@@ -16,7 +16,10 @@ Future<void> dialogBuilder(BuildContext context, Function onDataInserted) {
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: const Text('Decide Options'),
+            backgroundColor: const Color.fromRGBO(33, 33, 33, 1),
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+            title: const Text('Decide Options',
+              style: TextStyle(color: Colors.white),),
             content: SingleChildScrollView(
               child: ListBody(
                 children: [
@@ -27,6 +30,8 @@ Future<void> dialogBuilder(BuildContext context, Function onDataInserted) {
                       padding: const EdgeInsets.only(bottom: 10),
                       child: TextField(
                         controller: controller,
+                        style: const TextStyle(
+                          color: Colors.white,),
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
                           labelText: 'Isi ${index + 1}',
@@ -80,26 +85,8 @@ Future<void> dialogBuilder(BuildContext context, Function onDataInserted) {
                           if (kDebugMode) {
                             print(resController);
                           }
-                          var random = Random();
-                          int randomNumber =
-                              random.nextInt(resController.length);
-                          String resultDecision = resController[randomNumber];
-                          DatabaseHelper()
-                              .insertItem(MyModel(
-                                  decisionValue: resController,
-                                  resultDecision: resultDecision))
-                              .then((value) {
-                          onDataInserted();
-                            if (kDebugMode) {
-                              print(
-                                  'insert to database success with id: $value');
-                            }
-                          }).catchError((e) {
-                            if (kDebugMode) {
-                              print('insert to database failed: $e');
-                            }
-                          });
-                          dialogBuilderResult(context, resultDecision);
+
+                          dialogBuilderResult(context, resController, onDataInserted);
                         },
                       ),
                       TextButton(
