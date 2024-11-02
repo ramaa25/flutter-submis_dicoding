@@ -1,5 +1,11 @@
+import 'dart:math';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+
+import 'package:submission_dicoding_decisioner/db/database_helper.dart';
+import 'package:submission_dicoding_decisioner/models/my_model.dart';
 
 Future<void> showLoadingDialog(BuildContext context) async {
   showDialog(
@@ -13,9 +19,13 @@ Future<void> showLoadingDialog(BuildContext context) async {
   );
 }
 
-Future<void> dialogBuilderResult(BuildContext context, String resultDecision) async {
+Future<void> dialogBuilderResult(BuildContext context, List<String> resController, Function onDataInserted) async {
   // Tampilkan dialog loading
   await showLoadingDialog(context);
+
+  var random = Random();
+  int randomNumber = random.nextInt(resController.length);
+  String resultDecision = resController[randomNumber];
 
   // Simulasikan proses loading, lalu tutup dialog loading setelah selesai
   await Future.delayed(const Duration(seconds: 2));
@@ -32,25 +42,46 @@ Future<void> dialogBuilderResult(BuildContext context, String resultDecision) as
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
-              title: const Text('Decision Result'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  SizedBox(
-                    child: Center(
-                      child: Text(resultDecision),
-                    ),
-                  ),
-                ],
+              backgroundColor: const Color.fromRGBO(33, 33, 33, 1),
+              title: const Text('Decision Result', style: TextStyle(color: Colors.white),),
+              content: SizedBox.fromSize(
+                size: const Size.fromHeight(25),
+                child: Center(
+                  child: Text(resultDecision, style: const TextStyle(color: Colors.white, fontSize: 20),)
+                ),
               ),
               actions: <Widget>[
-                Center(
-                  child: TextButton(
-                    child: const Text('Yeayyy!'),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    TextButton(
+                      child: const Text('Save'),
+                      onPressed: () {
+                        DatabaseHelper()
+                            .insertItem(MyModel(
+                            decisionValue: resController,
+                            resultDecision: resultDecision))
+                            .then((value) {
+                          if (kDebugMode) {
+                            print(
+                                'insert to database success with id: $value');
+                          }
+                        }).catchError((e) {
+                          if (kDebugMode) {
+                            print('insert to database failed: $e');
+                          }
+                        });
+                        onDataInserted();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    TextButton(
+                      child: const Text('Close'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ]
                 )
               ],
             );

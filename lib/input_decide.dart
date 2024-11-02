@@ -1,9 +1,6 @@
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:submission_dicoding_decisioner/db/database_helper.dart';
 import 'package:submission_dicoding_decisioner/decide_result.dart';
-import 'package:submission_dicoding_decisioner/models/my_model.dart';
 
 Future<void> dialogBuilder(BuildContext context, Function onDataInserted) {
   List<TextEditingController> controllers = [

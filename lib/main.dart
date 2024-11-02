@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:submission_dicoding_decisioner/input-decide.dart';
+import 'package:submission_dicoding_decisioner/input_decide.dart';
 import 'package:submission_dicoding_decisioner/models/my_model.dart';
 
 import 'db/database_helper.dart';
@@ -11,8 +11,32 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  List<MyModel> decisionsData = [];
+  bool isLoading = true;
+
+  // Fungsi untuk memuat data dari database
+  void _loadDecisions() async {
+    final dbHelper = DatabaseHelper();
+    final data = await dbHelper.getItems();
+    setState(() {
+      decisionsData = data;
+      isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDecisions(); // Load data saat aplikasi pertama kali berjalan
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,146 +49,134 @@ class MyApp extends StatelessWidget {
         color: Theme.of(context).canvasColor,
         child: SafeArea(
             child: Scaffold(
-          appBar: AppBar(
-            backgroundColor: const Color.fromRGBO(33, 33, 33, 1),
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Decisioner',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromRGBO(230, 230, 230, 1)),
-                ),
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5),
-                      color: const Color.fromRGBO(33, 33, 33, 1),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(1),
-                          offset:
-                              const Offset(3, 3), // changes position of shadow
-                        ),
-                      ],
-                      border: Border.all(
-                        color: Colors.black,
-                        width: 1.25,
+              appBar: AppBar(
+                backgroundColor: const Color.fromRGBO(33, 33, 33, 1),
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Decisioner',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromRGBO(230, 230, 230, 1),
                       ),
                     ),
-                    child: const IconButton(
-                        onPressed: null,
-                        iconSize: 20,
-                        icon: Icon(
-                          CupertinoIcons.arrow_counterclockwise,
-                          color: Color.fromRGBO(230, 230, 230, 1),
-                        )),
-                  ),
+                    if (decisionsData.isNotEmpty)
+                      const Text(
+                        'Swipe card to delete',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.red,
+                        ),
+                      )
+                  ],
                 ),
-              ],
-            ),
-          ),
-          body: const MyHomePage(),
-          floatingActionButton: const MyFloatingActionButton(),
-        )),
+              ),
+              body: MyHomePage(
+                decisionsData: decisionsData,
+                onLoadDecisions: _loadDecisions,
+                isLoading: isLoading,// Berikan akses ke _loadDecisions
+              ),
+              floatingActionButton:
+                Material(
+                  color: Colors.transparent,
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  shadowColor: Colors.white.withOpacity(0.5),
+                  child : MyFloatingActionButton(
+                    decisions: decisionsData,
+                    loadDecisions: _loadDecisions, // Berikan akses ke _loadDecisions
+                  )
+                  )
+            )),
       ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+class MyHomePage extends StatelessWidget {
+  final List<MyModel> decisionsData;
+  final VoidCallback onLoadDecisions;
+  final bool isLoading;
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  List<MyModel> _decisions = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDecisions();
-  }
-
-  // Memanggil fungsi untuk mendapatkan data dari database
-  void _loadDecisions() async {
-    final dbHelper = DatabaseHelper();
-    final data = await dbHelper.getItems();
-    if (kDebugMode) {
-      print(data);
-      print(decisions);
-    }
-    super.initState();
-    setState(() {
-      _decisions = data;
-    });
-  }
-
-  List<MyModel> get decisions => _decisions;
+  const MyHomePage({super.key, required this.decisionsData, required this.onLoadDecisions, required this.isLoading});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       height: double.infinity,
-      child: _decisions.isEmpty
+      child: isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : decisionsData.isEmpty
           ? Center(
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.65,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    color: const Color.fromRGBO(33, 33, 33, 1),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(1),
-                        offset:
-                            const Offset(5, 5), // changes position of shadow
-                      ),
-                    ],
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 2,
-                    ),
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () => dialogBuilder(context, _loadDecisions),
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5)),
-                      padding: const EdgeInsets.all(15),
-                      backgroundColor: const Color.fromRGBO(33, 33, 33, 1),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        Icon(
-                          CupertinoIcons.add,
-                          color: Color.fromRGBO(230, 230, 230, 1),
-                        ),
-                        Text(
-                          'Buat keputusan baru',
-                          style: TextStyle(
-                              color: Color.fromRGBO(230, 230, 230, 1),
-                              fontWeight: FontWeight.w600),
-                        )
-                      ],
-                    ),
-                  ),
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.65,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: const Color.fromRGBO(33, 33, 33, 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(1),
+                  offset: const Offset(5, 5), // Posisi bayangan
                 ),
+              ],
+              border: Border.all(
+                color: Colors.black,
+                width: 2,
               ),
-            )
-          : ListView.builder(
-              itemCount: _decisions.length,
-              itemBuilder: (context, index) {
-                return DecideResult(_decisions[index]);
-              },
             ),
+            child: ElevatedButton(
+              onPressed: () => dialogBuilder(context, onLoadDecisions),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                padding: const EdgeInsets.all(15),
+                backgroundColor: const Color.fromRGBO(33, 33, 33, 1),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Icon(
+                    CupertinoIcons.add,
+                    color: Color.fromRGBO(230, 230, 230, 1),
+                  ),
+                  Text(
+                    'Buat keputusan baru',
+                    style: TextStyle(
+                      color: Color.fromRGBO(230, 230, 230, 1),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      )
+          : ListView.builder(
+        itemCount: decisionsData.length,
+        itemBuilder: (context, index) {
+          final item = decisionsData[index];
+          return Dismissible(
+              key: Key(item.id.toString()),
+              onDismissed: (direction) {
+                final dbHelper = DatabaseHelper();
+                dbHelper.deleteItem(decisionsData[index].id!);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Decision deleted'),
+                  ),
+                );
+                onLoadDecisions();
+              },
+              child: DecideResult(decisionsData[index]));
+        },
+      )
     );
   }
 }
@@ -217,22 +229,22 @@ class DecideResult extends StatelessWidget {
 }
 
 class MyFloatingActionButton extends StatelessWidget {
-  const MyFloatingActionButton({super.key});
+  final List<MyModel> decisions;
+  final VoidCallback loadDecisions;
+
+  const MyFloatingActionButton({
+    super.key,
+    required this.decisions,
+    required this.loadDecisions,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Access the decisions list from the parent widget's state
-    final parentState = context.findAncestorStateOfType<_MyHomePageState>();
-    // Ensure loadDecision is non-null
-    final loadDecision = parentState?._loadDecisions ?? () {};
-
     return Visibility(
-      visible: parentState?.decisions.isNotEmpty ??
-          true, // Show FAB if there are decisions
+      visible: decisions.isNotEmpty,
       child: FloatingActionButton(
         onPressed: () {
-          // Always call loadDecision which is non-null
-          dialogBuilder(context, loadDecision);
+          dialogBuilder(context, loadDecisions); // Panggil loadDecisions
         },
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
@@ -246,3 +258,4 @@ class MyFloatingActionButton extends StatelessWidget {
     );
   }
 }
+
