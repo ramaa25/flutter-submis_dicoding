@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:submission_dicoding_decisioner/decide_result.dart';
 
 Future<void> dialogBuilder(BuildContext context, Function onDataInserted) {
-  List<TextEditingController> controllers = [
+  final controllers = [
     TextEditingController(),
   ];
 
